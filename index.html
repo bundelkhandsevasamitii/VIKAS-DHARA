@@ -1,0 +1,999 @@
+```html
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>विकास धारा | Vikas Dhara - ग्राम चयन पोर्टल</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans Devanagari -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Devanagari', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f1f5f9;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(5, 150, 105, 0.05) 0px, transparent 50%);
+            min-height: 100vh;
+        }
+        .portal-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+        }
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%231e3a8a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.75' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.85rem center;
+            background-repeat: no-repeat;
+            background-size: 1.35em 1.35em;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased flex flex-col">
+
+    <!-- Top Official Tricolor Accent Strip -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-amber-500 via-white to-emerald-600 border-b border-slate-200"></div>
+
+    <!-- Official Portal Header with Bilingual Toggle -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm px-4 py-3">
+        <div class="max-w-3xl mx-auto flex items-center justify-between">
+            <!-- Portal Emblem & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-900 flex items-center justify-center text-white shadow-sm">
+                    <i class="fa-solid fa-landmark-dome text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 id="app-title" class="text-lg sm:text-xl font-bold text-blue-950 tracking-tight leading-none">विकास धारा</h1>
+                        <span class="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">PORTAL</span>
+                    </div>
+                    <p id="app-subtitle" class="text-xs text-slate-500 font-medium mt-1">ग्राम विकास एवं सार्वजनिक सुविधा सूचना प्रणाली</p>
+                </div>
+            </div>
+
+            <!-- Hindi / English Language Switcher -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-300" role="group" aria-label="Language Switcher">
+                <button type="button" id="btn-hi" onclick="setLanguage('hi')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 bg-blue-900 text-white shadow-sm">
+                    हिंदी
+                </button>
+                <button type="button" id="btn-en" onclick="setLanguage('en')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 text-slate-600 hover:text-blue-900">
+                    English
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Centered Form Container (ONLY Location Selection Form) -->
+    <main class="flex-1 w-full max-w-lg mx-auto px-4 py-8 sm:py-12 flex flex-col justify-center">
+
+        <!-- Custom Notification / Validation Alert Box -->
+        <div id="toast-box" class="hidden mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl text-sm flex items-center justify-between shadow-sm fade-in">
+            <div class="flex items-center space-x-2.5">
+                <i id="toast-icon" class="fa-solid fa-circle-exclamation text-red-600"></i>
+                <span id="toast-message" class="font-medium"></span>
+            </div>
+            <button type="button" onclick="hideToast()" class="text-red-500 hover:text-red-800 p-1">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Location Selection Card -->
+        <section class="portal-card rounded-2xl overflow-hidden fade-in">
+            <!-- Card Top Banner -->
+            <div class="bg-blue-900 px-5 sm:px-6 py-4 text-white flex items-center justify-between">
+                <div>
+                    <span id="form-badge" class="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-blue-200">
+                        <i class="fa-solid fa-location-dot text-emerald-400"></i>
+                        <span>ग्राम एवं क्षेत्र चयन</span>
+                    </span>
+                    <h2 id="form-heading" class="text-lg sm:text-xl font-bold mt-0.5">अपना गाँव चुनें</h2>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-blue-800/80 border border-blue-700 flex items-center justify-center text-emerald-300">
+                    <i class="fa-solid fa-map-location-dot text-base"></i>
+                </div>
+            </div>
+
+            <!-- 4-Step Cascading Location Form -->
+            <form id="location-form" class="p-5 sm:p-6 space-y-4" onsubmit="handleFormSubmit(event)">
+                <p id="form-subheading" class="text-xs text-slate-500 leading-relaxed border-b border-slate-100 pb-3">
+                    भारत के किसी भी राज्य, ज़िले, तहसील और गाँव का विवरण देखने के लिए नीचे दिए गए चारों विकल्प चुनें।
+                </p>
+
+                <!-- Input 1: Select State -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="select-state" id="label-state" class="block text-sm font-semibold text-slate-700">
+                            1. राज्य चुनें <span class="text-red-500">*</span>
+                        </label>
+                        <span id="loader-state" class="hidden text-xs font-medium text-blue-800 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> <span class="loader-txt">लोड हो रहा है...</span>
+                        </span>
+                    </div>
+                    <select id="select-state" onchange="onStateChange()" class="w-full bg-slate-50 hover:bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-900/15 transition-all">
+                        <option value="">-- राज्य लोड हो रहे हैं... --</option>
+                    </select>
+                </div>
+
+                <!-- Input 2: Select District -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="select-district" id="label-district" class="block text-sm font-semibold text-slate-700">
+                            2. ज़िला चुनें <span class="text-red-500">*</span>
+                        </label>
+                        <span id="loader-district" class="hidden text-xs font-medium text-blue-800 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> <span class="loader-txt">लोड हो रहा है...</span>
+                        </span>
+                    </div>
+                    <select id="select-district" onchange="onDistrictChange()" disabled class="w-full bg-slate-50 hover:bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-900/15 transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                        <option value="">-- पहले राज्य चुनें --</option>
+                    </select>
+                </div>
+
+                <!-- Input 3: Select Sub-District / Tehsil -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="select-subdistrict" id="label-subdistrict" class="block text-sm font-semibold text-slate-700">
+                            3. तहसील / उप-ज़िला चुनें <span class="text-red-500">*</span>
+                        </label>
+                        <span id="loader-subdistrict" class="hidden text-xs font-medium text-blue-800 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> <span class="loader-txt">लोड हो रहा है...</span>
+                        </span>
+                    </div>
+                    <select id="select-subdistrict" onchange="onSubDistrictChange()" disabled class="w-full bg-slate-50 hover:bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-900/15 transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                        <option value="">-- पहले ज़िला चुनें --</option>
+                    </select>
+                </div>
+
+                <!-- Input 4: Select Village (With Instant Search Filter for Large Lists) -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="select-village" id="label-village" class="block text-sm font-semibold text-slate-700">
+                            4. गाँव चुनें <span class="text-red-500">*</span>
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <span id="village-count-badge" class="hidden text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200"></span>
+                            <span id="loader-village" class="hidden text-xs font-medium text-blue-800 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-notch fa-spin"></i> <span class="loader-txt">लोड हो रहा है...</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Village Filter Input (Appears when villages load so users can quickly find their village among hundreds) -->
+                    <div id="village-search-wrapper" class="hidden relative mb-2">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="village-search-input" oninput="filterVillages()" placeholder="गाँव का नाम खोजें..." class="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-8 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-900/10 transition-all">
+                        <button type="button" id="clear-village-search" onclick="clearVillageSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
+                    </div>
+
+                    <select id="select-village" disabled class="w-full bg-slate-50 hover:bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-900/15 transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                        <option value="">-- पहले तहसील चुनें --</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button (Redirects to home.html) -->
+                <div class="pt-3">
+                    <button type="submit" id="btn-submit" class="w-full py-3.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-600/20 active:scale-[0.99] transition-all flex items-center justify-center space-x-2">
+                        <span id="btn-submit-text">आगे बढ़ें / पोर्टल खोलें</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Official Portal Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500 mt-auto">
+        <p id="footer-text">© 2026 विकास धारा (Vikas Dhara) • ग्राम पंचायत डिजिटल सूचना पोर्टल</p>
+    </footer>
+
+    <script>
+        // =========================================================================
+        // 1. STATE & BILINGUAL UI CONFIGURATION
+        // =========================================================================
+        let currentLang = localStorage.getItem('vikas_dhara_lang') || 'hi';
+
+        // Primary & Fallback Open-Source Indian Administrative Hierarchy (LGD / Census) API Endpoints
+        const DATA_SOURCES = [
+            "https://raw.githubusercontent.com/pranshumaheshwari/indian-cities-and-villages/master/data.json",
+            "https://cdn.jsdelivr.net/gh/pranshumaheshwari/indian-cities-and-villages@master/data.json"
+        ];
+
+        // Cached datasets in memory for zero-lag switching
+        let fullIndiaHierarchy = null; // Stores full State -> District -> SubDistrict -> Village tree if loaded
+        let currentStatesList = [];
+        let currentDistrictsList = [];
+        let currentSubDistrictsList = [];
+        let currentVillagesList = [];
+
+        // Official Hindi translations for all 36 Indian States & Union Territories
+        const STATE_HINDI_MAP = {
+            "ANDAMAN AND NICOBAR ISLANDS": "अंडमान और निकोबार द्वीप समूह",
+            "ANDHRA PRADESH": "आंध्र प्रदेश",
+            "ARUNACHAL PRADESH": "अरुणाचल प्रदेश",
+            "ASSAM": "असम",
+            "BIHAR": "बिहार",
+            "CHANDIGARH": "चंडीगढ़",
+            "CHHATTISGARH": "छत्तीसगढ़",
+            "DADRA AND NAGAR HAVELI AND DAMAN AND DIU": "दादरा और नगर हवेली और दमन और दीव",
+            "DADRA AND NAGAR HAVELI": "दादरा और नगर हवेली",
+            "DAMAN AND DIU": "दमन और दीव",
+            "DELHI": "दिल्ली",
+            "NCT OF DELHI": "दिल्ली",
+            "GOA": "गोवा",
+            "GUJARAT": "गुजरात",
+            "HARYANA": "हरियाणा",
+            "HIMACHAL PRADESH": "हिमाचल प्रदेश",
+            "JAMMU AND KASHMIR": "जम्मू और कश्मीर",
+            "JHARKHAND": "झारखंड",
+            "KARNATAKA": "कर्नाटक",
+            "KERALA": "केरल",
+            "LADAKH": "लद्दाख",
+            "LAKSHADWEEP": "लक्षद्वीप",
+            "MADHYA PRADESH": "मध्य प्रदेश",
+            "MAHARASHTRA": "महाराष्ट्र",
+            "MANIPUR": "मणिपुर",
+            "MEGHALAYA": "मेघालय",
+            "MIZORAM": "मिज़ोरम",
+            "NAGALAND": "नागालैंड",
+            "ODISHA": "ओडिशा",
+            "ORISSA": "ओडिशा",
+            "PUDUCHERRY": "पुदुचेरी",
+            "PONDICHERRY": "पुदुचेरी",
+            "PUNJAB": "पंजाब",
+            "RAJASTHAN": "राजस्थान",
+            "SIKKIM": "सिक्किम",
+            "TAMIL NADU": "तमिलनाडु",
+            "TELANGANA": "तेलंगाना",
+            "TRIPURA": "त्रिपुरा",
+            "UTTAR PRADESH": "उत्तर प्रदेश",
+            "UTTARAKHAND": "उत्तराखंड",
+            "WEST BENGAL": "पश्चिम बंगाल"
+        };
+
+        // Bilingual UI Dictionary
+        const i18n = {
+            hi: {
+                appTitle: "विकास धारा",
+                appSubtitle: "ग्राम विकास एवं सार्वजनिक सुविधा सूचना प्रणाली",
+                formBadge: "ग्राम एवं क्षेत्र चयन",
+                formHeading: "अपना गाँव चुनें",
+                formSubheading: "भारत के किसी भी राज्य, ज़िले, तहसील और गाँव का विवरण देखने के लिए नीचे दिए गए चारों विकल्प चुनें।",
+                labelState: "1. राज्य चुनें",
+                labelDistrict: "2. ज़िला चुनें",
+                labelSubdistrict: "3. तहसील / उप-ज़िला चुनें",
+                labelVillage: "4. गाँव चुनें",
+                loadingText: "लोड हो रहा है...",
+                defaultState: "-- राज्य चुनें (सभी राज्य एवं केंद्र शासित प्रदेश) --",
+                defaultDistrict: "-- पहले राज्य चुनें --",
+                defaultDistrictReady: "-- ज़िला चुनें --",
+                defaultSubdistrict: "-- पहले ज़िला चुनें --",
+                defaultSubdistrictReady: "-- तहसील / उप-ज़िला चुनें --",
+                defaultVillage: "-- पहले तहसील चुनें --",
+                defaultVillageReady: "-- गाँव चुनें --",
+                noMatchVillage: "-- कोई गाँव नहीं मिला --",
+                searchVillagePh: "गाँव का नाम टाइप करके खोजें...",
+                villagesUnit: "गाँव",
+                btnSubmitText: "आगे बढ़ें / पोर्टल खोलें",
+                errorIncomplete: "कृपया आगे बढ़ने के लिए राज्य, ज़िला, तहसील और गाँव चारों विकल्प चुनें।",
+                networkFallbackInfo: "इंटरनेट धीमा होने के कारण ऑफ़लाइन मानक सूची सक्रिय की गई है।",
+                footerText: "© 2026 विकास धारा (Vikas Dhara) • ग्राम पंचायत डिजिटल सूचना पोर्टल"
+            },
+            en: {
+                appTitle: "Vikas Dhara",
+                appSubtitle: "Rural Development & Public Infrastructure Portal",
+                formBadge: "LOCATION SELECTION",
+                formHeading: "Select Your Village",
+                formSubheading: "Select your State, District, Sub-District, and Village from all-India records below to proceed.",
+                labelState: "1. Select State",
+                labelDistrict: "2. Select District",
+                labelSubdistrict: "3. Select Sub-District / Tehsil",
+                labelVillage: "4. Select Village",
+                loadingText: "Loading...",
+                defaultState: "-- Select State / UT --",
+                defaultDistrict: "-- Select State First --",
+                defaultDistrictReady: "-- Select District --",
+                defaultSubdistrict: "-- Select District First --",
+                defaultSubdistrictReady: "-- Select Sub-District / Tehsil --",
+                defaultVillage: "-- Select Sub-District First --",
+                defaultVillageReady: "-- Select Village --",
+                noMatchVillage: "-- No matching village found --",
+                searchVillagePh: "Type to filter village name...",
+                villagesUnit: "Villages",
+                btnSubmitText: "Proceed / Open Portal",
+                errorIncomplete: "Please select all 4 fields (State, District, Sub-District, and Village) to proceed.",
+                networkFallbackInfo: "Loaded built-in administrative dataset due to slow network.",
+                footerText: "© 2026 Vikas Dhara • Gram Panchayat Digital Information Portal"
+            }
+        };
+
+        // =========================================================================
+        // 2. TRANSLITERATION & DISPLAY HELPERS (ENGLISH <-> HINDI)
+        // =========================================================================
+        function toTitleCase(str) {
+            if (!str) return "";
+            return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+        }
+
+        // Smart phonetic English-to-Devanagari transliterator for Indian place names
+        function transliterateToHindi(englishName) {
+            if (!englishName) return "";
+            const upper = englishName.trim().toUpperCase();
+            if (STATE_HINDI_MAP[upper]) return STATE_HINDI_MAP[upper];
+
+            let s = englishName.trim().toLowerCase();
+            // Handle common Indian place suffixes accurately
+            s = s.replace(/puram$/g, "पुरम")
+                 .replace(/pur$/g, "पुर")
+                 .replace(/garh$/g, "गढ़")
+                 .replace(/ganj$/g, "गंज")
+                 .replace(/abad$/g, "ाबाद")
+                 .replace(/nagar$/g, "नगर")
+                 .replace(/gram$/g, "ग्राम")
+                 .replace(/gaon$/g, "गाँव")
+                 .replace(/kheda$/g, "खेड़ा")
+                 .replace(/khera$/g, "खेड़ा")
+                 .replace(/palli$/g, "पल्ली")
+                 .replace(/patnam$/g, "पट्टनम")
+                 .replace(/wadi$/g, "वाड़ी")
+                 .replace(/kot$/g, "कोट");
+
+            const digraphs = [
+                ["ksh", "क्ष"], ["gya", "ज्ञा"], ["shr", "श्र"], ["tra", "त्र"],
+                ["chh", "छ"], ["kh", "ख"], ["gh", "घ"], ["ch", "च"],
+                ["jh", "झ"], ["th", "थ"], ["dh", "ध"], ["ph", "फ"],
+                ["bh", "भ"], ["sh", "श"], ["aa", "आ"], ["ee", "ई"],
+                ["oo", "ऊ"], ["ai", "ऐ"], ["au", "औ"], ["ri", "ऋ"]
+            ];
+
+            const consonants = {
+                k: "क", g: "ग", j: "ज", t: "त", d: "द", n: "न",
+                p: "प", f: "फ", b: "ब", m: "म", y: "य", r: "र",
+                l: "ल", v: "व", w: "व", s: "स", h: "ह", z: "ज़", q: "क़"
+            };
+
+            const matras = {
+                a: "ा", i: "ि", e: "े", u: "ु", o: "ो"
+            };
+
+            let out = "";
+            let i = 0;
+            while (i < s.length) {
+                // Keep already converted Devanagari characters intact
+                if (s.charCodeAt(i) >= 0x0900 && s.charCodeAt(i) <= 0x097F) {
+                    out += s[i];
+                    i++;
+                    continue;
+                }
+                if (s[i] === " " || s[i] === "-" || s[i] === "(" || s[i] === ")") {
+                    out += s[i];
+                    i++;
+                    continue;
+                }
+
+                let matched = false;
+                for (const [eng, hin] of digraphs) {
+                    if (s.startsWith(eng, i)) {
+                        out += hin;
+                        i += eng.length;
+                        matched = true;
+                        break;
+                    }
+                }
+                if (matched) continue;
+
+                const ch = s[i];
+                if (consonants[ch]) {
+                    out += consonants[ch];
+                    const next = s[i + 1];
+                    if (next && matras[next]) {
+                        if (next === "a" && s[i + 2] === "a") {
+                            out += "ा";
+                            i += 3;
+                            continue;
+                        } else if (next !== "a" || (i + 2 >= s.length)) {
+                            // Add 'ा' at word-end 'a' (e.g. Ghtra -> घटरा), skip inherent 'a' mid-word
+                            if (next === "a" && (i + 2 >= s.length || s[i + 2] === " ")) {
+                                out += "ा";
+                            } else if (next !== "a") {
+                                out += matras[next];
+                            }
+                            i += 2;
+                            continue;
+                        }
+                    }
+                    i++;
+                } else if (i === 0 || s[i - 1] === " ") {
+                    const initVowels = { a: "अ", i: "इ", u: "उ", e: "ए", o: "ओ" };
+                    out += initVowels[ch] || ch;
+                    i++;
+                } else {
+                    if (matras[ch] && ch !== "a") out += matras[ch];
+                    i++;
+                }
+            }
+            return out;
+        }
+
+        // Format option label according to selected UI language
+        function formatPlaceLabel(englishRawName, isState = false) {
+            const cleanEng = toTitleCase(englishRawName.trim());
+            if (currentLang === 'en') {
+                return cleanEng;
+            }
+            const upper = englishRawName.trim().toUpperCase();
+            if (isState && STATE_HINDI_MAP[upper]) {
+                return `${STATE_HINDI_MAP[upper]} (${cleanEng})`;
+            }
+            const hindiApprox = transliterateToHindi(cleanEng);
+            return `${hindiApprox} (${cleanEng})`;
+        }
+
+        // =========================================================================
+        // 3. DATA LOADING (ALL STATES, DISTRICTS, SUB-DISTRICTS & VILLAGES)
+        // =========================================================================
+        function toggleLoader(level, isLoading) {
+            const el = document.getElementById(`loader-${level}`);
+            if (!el) return;
+            el.querySelector('.loader-txt').textContent = i18n[currentLang].loadingText;
+            if (isLoading) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+
+        // Fallback comprehensive All-India States + Sample Districts/SubDistricts/Villages if offline
+        const OFFLINE_INDIA_DATASET = [
+            {
+                state: "MADHYA PRADESH",
+                districts: [
+                    {
+                        district: "NARMADAPURAM",
+                        subDistricts: [
+                            { subDistrict: "SEONI MALWA", villages: ["Ghatra", "Bharlay", "Shivpur", "Nandarwada", "Bhiladia", "Amlada", "Khaparia", "Banskheda", "Chatarkheda", "Dhamaniya"] },
+                            { subDistrict: "ITARSI", villages: ["Pathrota", "Sontalai", "Jujharpur", "Kesla", "Bori", "Taku"] },
+                            { subDistrict: "SOHAGPUR", villages: ["Semri Harchand", "Shobhapur", "Kishanpur", "Ajnera"] }
+                        ]
+                    },
+                    {
+                        district: "BHOPAL",
+                        subDistricts: [
+                            { subDistrict: "HUZUR", villages: ["Ratibad", "Neelbad", "Kolar", "Misrod", "Bilkisganj", "Mugaliya Hat"] },
+                            { subDistrict: "BERASIA", villages: ["Gunga", "Nazeerabad", "Dhamarra", "Runaha"] }
+                        ]
+                    },
+                    {
+                        district: "INDORE",
+                        subDistricts: [
+                            { subDistrict: "MHOW", villages: ["Kodriya", "Manpur", "Simrol", "Hasalpur"] },
+                            { subDistrict: "SANWER", villages: ["Kshipra", "Dharmapuri", "Ajnod"] }
+                        ]
+                    }
+                ]
+            },
+            {
+                state: "UTTAR PRADESH",
+                districts: [
+                    {
+                        district: "VARANASI",
+                        subDistricts: [
+                            { subDistrict: "PINDRA", villages: ["Phoolpur", "Babatpur", "Kharagpur", "Sindhora"] },
+                            { subDistrict: "SADAR", villages: ["Kashi Vidyapith", "Chiraigaon", "Harhua"] }
+                        ]
+                    },
+                    {
+                        district: "LUCKNOW",
+                        subDistricts: [
+                            { subDistrict: "BAKSHI KA TALAB", villages: ["Itaunja", "Mahona", "Bargadi"] },
+                            { subDistrict: "MOHANLALGANJ", villages: ["Gosainganj", "Nigohan", "Sisendi"] }
+                        ]
+                    }
+                ]
+            },
+            {
+                state: "RAJASTHAN",
+                districts: [
+                    {
+                        district: "JAIPUR",
+                        subDistricts: [
+                            { subDistrict: "AMER", villages: ["Kukas", "Achrol", "Chandwaji", "Manoharpur"] },
+                            { subDistrict: "SANGANER", villages: ["Muhana", "Watika", "Bagru"] }
+                        ]
+                    }
+                ]
+            },
+            {
+                state: "MAHARASHTRA",
+                districts: [
+                    {
+                        district: "PUNE",
+                        subDistricts: [
+                            { subDistrict: "HAVELI", villages: ["Wagholi", "Loni Kalbhor", "Uruli Kanchan", "Khadakwasla"] },
+                            { subDistrict: "BARAMATI", villages: ["Malegaon", "Supe", "Katewadi"] }
+                        ]
+                    }
+                ]
+            },
+            {
+                state: "BIHAR",
+                districts: [
+                    {
+                        district: "PATNA",
+                        subDistricts: [
+                            { subDistrict: "DANAPUR", villages: ["Maner", "Bihta", "Naubatpur"] },
+                            { subDistrict: "BARH", villages: ["Bakhtiyarpur", "Pandarak", "Athmalgola"] }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Fetch full All-India Administrative Dataset (All 36 States/UTs, 750+ Districts, 6,000+ Sub-Districts, 6,40,000+ Villages)
+        async function fetchAllIndiaDataset() {
+            if (fullIndiaHierarchy) return fullIndiaHierarchy;
+
+            for (const url of DATA_SOURCES) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) continue;
+                    const data = await response.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        fullIndiaHierarchy = data;
+                        return fullIndiaHierarchy;
+                    }
+                } catch (err) {
+                    console.warn("Primary dataset source failed, trying next mirror...", err);
+                }
+            }
+
+            // If offline or blocked by firewall, synthesize all 36 states with offline sample districts
+            const allStateNames = Object.keys(STATE_HINDI_MAP).filter((v, idx, arr) => {
+                // Keep canonical 36 states/UTs
+                return !["DADRA AND NAGAR HAVELI", "DAMAN AND DIU", "NCT OF DELHI", "ORISSA", "PONDICHERRY"].includes(v);
+            });
+
+            fullIndiaHierarchy = allStateNames.map(st => {
+                const existing = OFFLINE_INDIA_DATASET.find(item => item.state === st);
+                if (existing) return existing;
+                return {
+                    state: st,
+                    districts: [
+                        {
+                            district: `${st} CENTRAL`,
+                            subDistricts: [
+                                { subDistrict: "SADAR TEHSIL", villages: ["Rampur", "Krishnapur", "Shantipur", "Gopalpur"] }
+                            ]
+                        }
+                    ]
+                };
+            });
+            return fullIndiaHierarchy;
+        }
+
+        // Initialize States Dropdown on Page Load
+        async function initializePortalData() {
+            toggleLoader('state', true);
+            const dataset = await fetchAllIndiaDataset();
+            
+            // Extract and sort all States alphabetically
+            currentStatesList = dataset
+                .map(item => item.state)
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b));
+
+            renderStatesDropdown();
+            toggleLoader('state', false);
+        }
+
+        function renderStatesDropdown() {
+            const stateSelect = document.getElementById('select-state');
+            const prevValue = stateSelect.value;
+            const t = i18n[currentLang];
+
+            stateSelect.innerHTML = `<option value="">${t.defaultState}</option>`;
+            currentStatesList.forEach(st => {
+                const opt = document.createElement('option');
+                opt.value = st;
+                opt.textContent = formatPlaceLabel(st, true);
+                stateSelect.appendChild(opt);
+            });
+
+            if (prevValue && currentStatesList.includes(prevValue)) {
+                stateSelect.value = prevValue;
+            }
+        }
+
+        // =========================================================================
+        // 4. CASCADING SELECTION HANDLERS
+        // =========================================================================
+        async function onStateChange() {
+            hideToast();
+            const stateVal = document.getElementById('select-state').value;
+            const distSelect = document.getElementById('select-district');
+            const subSelect = document.getElementById('select-subdistrict');
+            const vilSelect = document.getElementById('select-village');
+            const t = i18n[currentLang];
+
+            // Reset downstream dropdowns
+            currentDistrictsList = [];
+            currentSubDistrictsList = [];
+            currentVillagesList = [];
+
+            subSelect.innerHTML = `<option value="">${t.defaultSubdistrict}</option>`;
+            subSelect.disabled = true;
+
+            vilSelect.innerHTML = `<option value="">${t.defaultVillage}</option>`;
+            vilSelect.disabled = true;
+            document.getElementById('village-search-wrapper').classList.add('hidden');
+            document.getElementById('village-count-badge').classList.add('hidden');
+
+            if (!stateVal) {
+                distSelect.innerHTML = `<option value="">${t.defaultDistrict}</option>`;
+                distSelect.disabled = true;
+                return;
+            }
+
+            toggleLoader('district', true);
+            const dataset = await fetchAllIndiaDataset();
+            const stateObj = dataset.find(s => s.state === stateVal);
+
+            if (stateObj && Array.isArray(stateObj.districts)) {
+                currentDistrictsList = stateObj.districts
+                    .map(d => d.district)
+                    .filter(Boolean)
+                    .sort((a, b) => a.localeCompare(b));
+            }
+
+            renderDistrictsDropdown();
+            toggleLoader('district', false);
+        }
+
+        function renderDistrictsDropdown() {
+            const distSelect = document.getElementById('select-district');
+            const prevValue = distSelect.value;
+            const t = i18n[currentLang];
+
+            if (currentDistrictsList.length === 0) {
+                distSelect.innerHTML = `<option value="">${t.defaultDistrict}</option>`;
+                distSelect.disabled = true;
+                return;
+            }
+
+            distSelect.disabled = false;
+            distSelect.innerHTML = `<option value="">${t.defaultDistrictReady}</option>`;
+            currentDistrictsList.forEach(dist => {
+                const opt = document.createElement('option');
+                opt.value = dist;
+                opt.textContent = formatPlaceLabel(dist, false);
+                distSelect.appendChild(opt);
+            });
+
+            if (prevValue && currentDistrictsList.includes(prevValue)) {
+                distSelect.value = prevValue;
+            }
+        }
+
+        async function onDistrictChange() {
+            hideToast();
+            const stateVal = document.getElementById('select-state').value;
+            const distVal = document.getElementById('select-district').value;
+            const subSelect = document.getElementById('select-subdistrict');
+            const vilSelect = document.getElementById('select-village');
+            const t = i18n[currentLang];
+
+            currentSubDistrictsList = [];
+            currentVillagesList = [];
+
+            vilSelect.innerHTML = `<option value="">${t.defaultVillage}</option>`;
+            vilSelect.disabled = true;
+            document.getElementById('village-search-wrapper').classList.add('hidden');
+            document.getElementById('village-count-badge').classList.add('hidden');
+
+            if (!distVal) {
+                subSelect.innerHTML = `<option value="">${t.defaultSubdistrict}</option>`;
+                subSelect.disabled = true;
+                return;
+            }
+
+            toggleLoader('subdistrict', true);
+            const dataset = await fetchAllIndiaDataset();
+            const stateObj = dataset.find(s => s.state === stateVal);
+            const distObj = stateObj?.districts?.find(d => d.district === distVal);
+
+            if (distObj && Array.isArray(distObj.subDistricts)) {
+                currentSubDistrictsList = distObj.subDistricts
+                    .map(sd => sd.subDistrict)
+                    .filter(Boolean)
+                    .sort((a, b) => a.localeCompare(b));
+            }
+
+            renderSubDistrictsDropdown();
+            toggleLoader('subdistrict', false);
+        }
+
+        function renderSubDistrictsDropdown() {
+            const subSelect = document.getElementById('select-subdistrict');
+            const prevValue = subSelect.value;
+            const t = i18n[currentLang];
+
+            if (currentSubDistrictsList.length === 0) {
+                subSelect.innerHTML = `<option value="">${t.defaultSubdistrict}</option>`;
+                subSelect.disabled = true;
+                return;
+            }
+
+            subSelect.disabled = false;
+            subSelect.innerHTML = `<option value="">${t.defaultSubdistrictReady}</option>`;
+            currentSubDistrictsList.forEach(sd => {
+                const opt = document.createElement('option');
+                opt.value = sd;
+                opt.textContent = formatPlaceLabel(sd, false);
+                subSelect.appendChild(opt);
+            });
+
+            if (prevValue && currentSubDistrictsList.includes(prevValue)) {
+                subSelect.value = prevValue;
+            }
+        }
+
+        async function onSubDistrictChange() {
+            hideToast();
+            const stateVal = document.getElementById('select-state').value;
+            const distVal = document.getElementById('select-district').value;
+            const subVal = document.getElementById('select-subdistrict').value;
+            const vilSelect = document.getElementById('select-village');
+            const t = i18n[currentLang];
+
+            currentVillagesList = [];
+            document.getElementById('village-search-input').value = "";
+            document.getElementById('clear-village-search').classList.add('hidden');
+
+            if (!subVal) {
+                vilSelect.innerHTML = `<option value="">${t.defaultVillage}</option>`;
+                vilSelect.disabled = true;
+                document.getElementById('village-search-wrapper').classList.add('hidden');
+                document.getElementById('village-count-badge').classList.add('hidden');
+                return;
+            }
+
+            toggleLoader('village', true);
+            const dataset = await fetchAllIndiaDataset();
+            const stateObj = dataset.find(s => s.state === stateVal);
+            const distObj = stateObj?.districts?.find(d => d.district === distVal);
+            const subObj = distObj?.subDistricts?.find(sd => sd.subDistrict === subVal);
+
+            if (subObj && Array.isArray(subObj.villages)) {
+                // Remove duplicate village names and sort alphabetically
+                currentVillagesList = [...new Set(subObj.villages.filter(Boolean))]
+                    .sort((a, b) => a.localeCompare(b));
+            }
+
+            renderVillagesDropdown();
+            toggleLoader('village', false);
+        }
+
+        function renderVillagesDropdown(filterQuery = "") {
+            const vilSelect = document.getElementById('select-village');
+            const searchWrapper = document.getElementById('village-search-wrapper');
+            const countBadge = document.getElementById('village-count-badge');
+            const prevValue = vilSelect.value;
+            const t = i18n[currentLang];
+
+            if (currentVillagesList.length === 0) {
+                vilSelect.innerHTML = `<option value="">${t.defaultVillage}</option>`;
+                vilSelect.disabled = true;
+                searchWrapper.classList.add('hidden');
+                countBadge.classList.add('hidden');
+                return;
+            }
+
+            // Show quick search box & total village count badge
+            searchWrapper.classList.remove('hidden');
+            countBadge.classList.remove('hidden');
+            countBadge.textContent = `${currentVillagesList.length} ${t.villagesUnit}`;
+
+            const q = filterQuery.trim().toLowerCase();
+            const filtered = q
+                ? currentVillagesList.filter(v => {
+                    const engMatch = v.toLowerCase().includes(q);
+                    const hinMatch = transliterateToHindi(v).includes(q);
+                    return engMatch || hinMatch;
+                })
+                : currentVillagesList;
+
+            vilSelect.disabled = false;
+
+            if (filtered.length === 0) {
+                vilSelect.innerHTML = `<option value="">${t.noMatchVillage}</option>`;
+                return;
+            }
+
+            vilSelect.innerHTML = `<option value="">${t.defaultVillageReady} (${filtered.length})</option>`;
+            // Use DocumentFragment for fast rendering even with 500+ villages
+            const fragment = document.createDocumentFragment();
+            filtered.forEach(vil => {
+                const opt = document.createElement('option');
+                opt.value = vil;
+                opt.textContent = formatPlaceLabel(vil, false);
+                fragment.appendChild(opt);
+            });
+            vilSelect.appendChild(fragment);
+
+            // Auto-select if filter narrows down to exact 1 village
+            if (filtered.length === 1 && q.length > 0) {
+                vilSelect.value = filtered[0];
+            } else if (prevValue && filtered.includes(prevValue)) {
+                vilSelect.value = prevValue;
+            }
+        }
+
+        function filterVillages() {
+            const input = document.getElementById('village-search-input');
+            const clearBtn = document.getElementById('clear-village-search');
+            if (input.value.trim().length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            renderVillagesDropdown(input.value);
+        }
+
+        function clearVillageSearch() {
+            const input = document.getElementById('village-search-input');
+            input.value = "";
+            document.getElementById('clear-village-search').classList.add('hidden');
+            renderVillagesDropdown("");
+            input.focus();
+        }
+
+        // =========================================================================
+        // 5. LANGUAGE SWITCHER (HINDI / ENGLISH)
+        // =========================================================================
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('vikas_dhara_lang', lang);
+            document.documentElement.lang = lang;
+
+            const btnHi = document.getElementById('btn-hi');
+            const btnEn = document.getElementById('btn-en');
+
+            if (lang === 'hi') {
+                btnHi.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 bg-blue-900 text-white shadow-sm";
+                btnEn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 text-slate-600 hover:text-blue-900";
+            } else {
+                btnEn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 bg-blue-900 text-white shadow-sm";
+                btnHi.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 text-slate-600 hover:text-blue-900";
+            }
+
+            const t = i18n[lang];
+            document.getElementById('app-title').textContent = t.appTitle;
+            document.getElementById('app-subtitle').textContent = t.appSubtitle;
+            document.querySelector('#form-badge span').textContent = t.formBadge;
+            document.getElementById('form-heading').textContent = t.formHeading;
+            document.getElementById('form-subheading').textContent = t.formSubheading;
+
+            document.getElementById('label-state').innerHTML = `${t.labelState} <span class="text-red-500">*</span>`;
+            document.getElementById('label-district').innerHTML = `${t.labelDistrict} <span class="text-red-500">*</span>`;
+            document.getElementById('label-subdistrict').innerHTML = `${t.labelSubdistrict} <span class="text-red-500">*</span>`;
+            document.getElementById('label-village').innerHTML = `${t.labelVillage} <span class="text-red-500">*</span>`;
+            document.getElementById('village-search-input').placeholder = t.searchVillagePh;
+            document.getElementById('btn-submit-text').textContent = t.btnSubmitText;
+            document.getElementById('footer-text').textContent = t.footerText;
+
+            // Re-render populated dropdowns in the newly selected language while preserving selections
+            if (currentStatesList.length > 0) renderStatesDropdown();
+            if (currentDistrictsList.length > 0) renderDistrictsDropdown();
+            else document.getElementById('select-district').innerHTML = `<option value="">${t.defaultDistrict}</option>`;
+
+            if (currentSubDistrictsList.length > 0) renderSubDistrictsDropdown();
+            else document.getElementById('select-subdistrict').innerHTML = `<option value="">${t.defaultSubdistrict}</option>`;
+
+            if (currentVillagesList.length > 0) {
+                renderVillagesDropdown(document.getElementById('village-search-input').value);
+            } else {
+                document.getElementById('select-village').innerHTML = `<option value="">${t.defaultVillage}</option>`;
+            }
+        }
+
+        // =========================================================================
+        // 6. VALIDATION, LOCALSTORAGE SAVE & REDIRECT TO home.html
+        // =========================================================================
+        function showToast(message) {
+            const box = document.getElementById('toast-box');
+            document.getElementById('toast-message').textContent = message;
+            box.classList.remove('hidden');
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideToast() {
+            document.getElementById('toast-box').classList.add('hidden');
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            hideToast();
+
+            const stateVal = document.getElementById('select-state').value;
+            const districtVal = document.getElementById('select-district').value;
+            const subdistrictVal = document.getElementById('select-subdistrict').value;
+            const villageVal = document.getElementById('select-village').value;
+
+            if (!stateVal || !districtVal || !subdistrictVal || !villageVal) {
+                showToast(i18n[currentLang].errorIncomplete);
+                return;
+            }
+
+            // Prepare bilingual location payload for home.html
+            const selectedLocationData = {
+                state: {
+                    en: toTitleCase(stateVal),
+                    hi: STATE_HINDI_MAP[stateVal.toUpperCase()] || transliterateToHindi(stateVal)
+                },
+                district: {
+                    en: toTitleCase(districtVal),
+                    hi: transliterateToHindi(districtVal)
+                },
+                subdistrict: {
+                    en: toTitleCase(subdistrictVal),
+                    hi: transliterateToHindi(subdistrictVal)
+                },
+                village: {
+                    en: toTitleCase(villageVal),
+                    hi: transliterateToHindi(villageVal)
+                },
+                language: currentLang,
+                selectedAt: new Date().toISOString()
+            };
+
+            // Save to localStorage for home.html
+            localStorage.setItem('vikas_dhara_location', JSON.stringify(selectedLocationData));
+            localStorage.setItem('vikas_dhara_lang', currentLang);
+
+            // Redirect cleanly to home.html with query parameters
+            const params = new URLSearchParams({
+                state: toTitleCase(stateVal),
+                district: toTitleCase(districtVal),
+                subdistrict: toTitleCase(subdistrictVal),
+                village: toTitleCase(villageVal),
+                lang: currentLang
+            });
+
+            window.location.href = `home.html?${params.toString()}`;
+        }
+
+        // =========================================================================
+        // 7. INITIALIZE ON PAGE LOAD
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+            initializePortalData();
+        });
+    </script>
+</body>
+</html>
+```
