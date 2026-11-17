@@ -1,12 +1,14 @@
 // firebase-config.js
 // 1. अपनी असली Firebase Config यहाँ डालें
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "vikas-dhara.firebaseapp.com",
-    projectId: "vikas-dhara",
-    storageBucket: "vikas-dhara.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyDIZRUqYkdBcia4qx9_O8EagcLCfpUFv_U",
+  authDomain: "jan-soochna-portal.firebaseapp.com",
+  databaseURL: "https://jan-soochna-portal-default-rtdb.firebaseio.com",
+  projectId: "jan-soochna-portal",
+  storageBucket: "jan-soochna-portal.firebasestorage.app",
+  messagingSenderId: "203359131435",
+  appId: "1:203359131435:web:63f61a3397eea85938d76e",
+  measurementId: "G-4NLFXTLPKB"
 };
 
 // 2. Firebase इनिशियलाइज करें
