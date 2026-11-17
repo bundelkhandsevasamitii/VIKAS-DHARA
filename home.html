@@ -219,7 +219,7 @@
             loadVillageData();
         }
 
-        // संशोधित: अब लोकेशन न मिलने पर भी पेज बैक नहीं होगा, बल्कि डिफ़ॉल्ट डेमो गाँव सेट कर देगा
+        // URL या localStorage से चुनी गई लोकेशन निकालना
         function getSelectedLocation() {
             const params = new URLSearchParams(window.location.search);
             if (params.has('id') && params.has('village')) {
@@ -235,15 +235,9 @@
             if (saved) {
                 return JSON.parse(saved);
             }
-            
-            // यदि कुछ न मिले, तो बैक करने के बजाय एक डिफ़ॉल्ट डेमो लोकेशन दें ताकि टेस्टिंग में रुकावट न आए
-            return {
-                villageId: "madhya_pradesh__chhatarpur__chandla__ghatra",
-                state: "मध्य प्रदेश",
-                district: "छतरपुर",
-                subdistrict: "चंदला",
-                village: "घटरा (Demo)"
-            };
+            // अगर कुछ न मिले तो वापस index.html पर भेजें
+            window.location.href = 'index.html';
+            return null;
         }
 
         async function loadVillageData() {
@@ -271,7 +265,7 @@
                 renderDashboardData(result.data);
                 document.getElementById('content-box').classList.remove('hidden');
             } else {
-                // अगर डेटाबेस में इस गाँव का रिकॉर्ड नहीं है, तो खाली स्टेट दिखाएं (बैक नहीं होगा)
+                // अगर डेटाबेस में इस गाँव का रिकॉर्ड नहीं है
                 document.getElementById('empty-state-box').classList.remove('hidden');
             }
         }
@@ -344,3 +338,4 @@
     </script>
 </body>
 </html>
+
