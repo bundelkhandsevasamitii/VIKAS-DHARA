@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>विकास धारा | Vikas Dhara - एडमिन लॉगिन</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans Devanagari -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Devanagari', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f1f5f9;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(5, 150, 105, 0.05) 0px, transparent 50%);
+            min-height: 100vh;
+        }
+        .portal-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased flex flex-col">
+
+    <!-- Top Official Tricolor Accent Strip -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-amber-500 via-white to-emerald-600 border-b border-slate-200"></div>
+
+    <!-- Official Portal Header -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm px-4 py-3">
+        <div class="max-w-3xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-900 flex items-center justify-center text-white shadow-sm">
+                    <i class="fa-solid fa-landmark-dome text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 id="app-title" class="text-lg sm:text-xl font-bold text-blue-950 tracking-tight leading-none">विकास धारा</h1>
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">ADMIN GATE</span>
+                    </div>
+                    <p id="app-subtitle" class="text-xs text-slate-500 font-medium mt-1">ग्राम विकास एवं सार्वजनिक सुविधा सूचना प्रणाली</p>
+                </div>
+            </div>
+
+            <!-- Hindi / English Language Switcher -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-300">
+                <button type="button" id="btn-hi" onclick="switchLanguage('hi')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-900 text-white shadow-sm">हिंदी</button>
+                <button type="button" id="btn-en" onclick="switchLanguage('en')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-blue-900">English</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Centered Login Card -->
+    <main class="flex-1 w-full max-w-md mx-auto px-4 py-10 flex flex-col justify-center fade-in">
+
+        <!-- Error Alert Toast -->
+        <div id="error-box" class="hidden mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl text-sm flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-2.5">
+                <i class="fa-solid fa-circle-exclamation text-red-600"></i>
+                <span id="error-msg" class="font-medium"></span>
+            </div>
+            <button type="button" onclick="document.getElementById('error-box').classList.add('hidden')" class="text-red-500 hover:text-red-800 p-1">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <section class="portal-card rounded-2xl overflow-hidden">
+            <div class="bg-blue-900 px-6 py-5 text-white flex items-center justify-between">
+                <div>
+                    <span id="login-badge" class="text-[11px] font-semibold uppercase tracking-wider text-blue-200">प्रशासक प्रमाणीकरण</span>
+                    <h2 id="login-heading" class="text-xl font-bold mt-0.5">एडमिन लॉगिन</h2>
+                </div>
+                <div class="w-11 h-11 rounded-full bg-blue-800 border border-blue-700 flex items-center justify-center text-emerald-300">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </div>
+            </div>
+
+            <form onsubmit="handleAdminLogin(event)" class="p-6 space-y-4">
+                <p id="login-desc" class="text-xs text-slate-500 border-b border-slate-100 pb-3 leading-relaxed">
+                    ग्राम डेटाबेस में जानकारी जोड़ने या संशोधित करने के लिए अधिकृत एडमिन ईमेल और पासवर्ड दर्ज करें।
+                </p>
+
+                <div>
+                    <label id="lbl-email" for="admin-email" class="block text-xs font-bold text-slate-700 mb-1.5">अधिकृत ईमेल (Admin Email)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                        <input type="email" id="admin-email" required placeholder="santoshking471@gmail.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-900/15 transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label id="lbl-pass" for="admin-pass" class="block text-xs font-bold text-slate-700 mb-1.5">पासवर्ड (Password)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                        <input type="password" id="admin-pass" required placeholder="••••••••••••" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-10 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-900/15 transition-all">
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 p-1">
+                            <i id="eye-icon" class="fa-solid fa-eye text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-login" class="w-full py-3 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-bold text-sm shadow-md shadow-blue-900/20 active:scale-[0.99] transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span id="btn-login-text">लॉगिन करें</span>
+                </button>
+
+                <div class="pt-2 text-center">
+                    <a href="index.html" id="link-public" class="text-xs font-semibold text-slate-500 hover:text-blue-900 inline-flex items-center space-x-1">
+                        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                        <span>सार्वजनिक पोर्टल (index.html) पर वापस जाएं</span>
+                    </a>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Official Portal Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500 mt-auto">
+        <p id="lbl-footer">© 2026 विकास धारा (Vikas Dhara) • ग्राम पंचायत डिजिटल सूचना पोर्टल</p>
+    </footer>
+
+    <script>
+        const ADMIN_EMAIL = "santoshking471@gmail.com";
+        const ADMIN_PASS = "Santosh@9368";
+
+        let currentLang = localStorage.getItem('vikas_dhara_lang') || 'hi';
+
+        const i18n = {
+            hi: {
+                appTitle: "विकास धारा",
+                appSubtitle: "ग्राम विकास एवं सार्वजनिक सुविधा सूचना प्रणाली",
+                loginBadge: "प्रशासक प्रमाणीकरण",
+                loginHeading: "एडमिन लॉगिन",
+                loginDesc: "ग्राम डेटाबेस में जानकारी जोड़ने या संशोधित करने के लिए अधिकृत एडमिन ईमेल और पासवर्ड दर्ज करें।",
+                lblEmail: "अधिकृत ईमेल (Admin Email)",
+                lblPass: "पासवर्ड (Password)",
+                btnLoginText: "लॉगिन करें",
+                linkPublic: "सार्वजनिक पोर्टल (index.html) पर वापस जाएं",
+                errInvalid: "अमान्य ईमेल या पासवर्ड! केवल अधिकृत एडमिन ही प्रवेश कर सकते हैं।",
+                lblFooter: "© 2026 विकास धारा (Vikas Dhara) • ग्राम पंचायत डिजिटल सूचना पोर्टल"
+            },
+            en: {
+                appTitle: "Vikas Dhara",
+                appSubtitle: "Rural Development & Public Infrastructure Portal",
+                loginBadge: "ADMINISTRATOR AUTHENTICATION",
+                loginHeading: "Admin Login",
+                loginDesc: "Enter authorized administrator credentials to add or manage village facilities and public records.",
+                lblEmail: "Authorized Email",
+                lblPass: "Password",
+                btnLoginText: "Sign In to Admin Panel",
+                linkPublic: "Return to Public Portal (index.html)",
+                errInvalid: "Invalid email or password! Access is restricted to authorized admin only.",
+                lblFooter: "© 2026 Vikas Dhara • Gram Panchayat Digital Information Portal"
+            }
+        };
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('vikas_dhara_lang', lang);
+
+            document.getElementById('btn-hi').className = lang === 'hi'
+                ? "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-900 text-white shadow-sm"
+                : "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-blue-900";
+            document.getElementById('btn-en').className = lang === 'en'
+                ? "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-900 text-white shadow-sm"
+                : "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-blue-900";
+
+            const t = i18n[lang];
+            document.getElementById('app-title').innerText = t.appTitle;
+            document.getElementById('app-subtitle').innerText = t.appSubtitle;
+            document.getElementById('login-badge').innerText = t.loginBadge;
+            document.getElementById('login-heading').innerText = t.loginHeading;
+            document.getElementById('login-desc').innerText = t.loginDesc;
+            document.getElementById('lbl-email').innerText = t.lblEmail;
+            document.getElementById('lbl-pass').innerText = t.lblPass;
+            document.getElementById('btn-login-text').innerText = t.btnLoginText;
+            document.querySelector('#link-public span').innerText = t.linkPublic;
+            document.getElementById('lbl-footer').innerText = t.lblFooter;
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('admin-pass');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passInput.type = 'password';
+                eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value.trim();
+            const pass = document.getElementById('admin-pass').value;
+
+            if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
+                sessionStorage.setItem('vikas_dhara_admin', 'true');
+                window.location.href = 'admin.html';
+            } else {
+                document.getElementById('error-msg').innerText = i18n[currentLang].errInvalid;
+                document.getElementById('error-box').classList.remove('hidden');
+            }
+        }
+
+        window.onload = function() {
+            if (sessionStorage.getItem('vikas_dhara_admin') === 'true') {
+                window.location.href = 'admin.html';
+                return;
+            }
+            if (currentLang === 'en') {
+                switchLanguage('en');
+            }
+        };
+    </script>
+</body>
+</html>
