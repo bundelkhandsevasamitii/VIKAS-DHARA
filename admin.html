@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>विकास धारा | Vikas Dhara - एडमिन पैनल</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Devanagari', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f1f5f9;
+            min-height: 100vh;
+        }
+        .portal-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased flex flex-col">
+
+    <!-- Top Tricolor Accent Strip -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-amber-500 via-white to-emerald-600 border-b border-slate-200"></div>
+
+    <!-- Header with Logout -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm px-4 py-3">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-900 flex items-center justify-center text-white shadow-sm">
+                    <i class="fa-solid fa-user-shield text-base"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-blue-950 tracking-tight leading-none">विकास धारा • एडमिन पैनल</h1>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">santoshking471@gmail.com</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <a href="home.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-bold transition-all">
+                    <i class="fa-solid fa-eye mr-1"></i> डैशबोर्ड देखें
+                </a>
+                <button type="button" onclick="adminLogout()" class="px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-all">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> लॉगआउट
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Admin Container -->
+    <main class="flex-1 w-full max-w-4xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- Toast Alert Box -->
+        <div id="toast-box" class="hidden px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-between shadow-sm">
+            <span id="toast-msg"></span>
+        </div>
+
+        <!-- Top Navigation Tabs -->
+        <div class="flex space-x-2 border-b border-slate-200 pb-3 overflow-x-auto">
+            <button type="button" onclick="switchTab('bulk')" id="tab-bulk" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white shadow-sm transition-all whitespace-nowrap">
+                <i class="fa-solid fa-file-code mr-1.5"></i> Bulk JSON Uploader (फाइल/टेक्स्ट से अपलोड)
+            </button>
+            <button type="button" onclick="switchTab('create')" id="tab-create" class="px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all whitespace-nowrap">
+                <i class="fa-solid fa-circle-plus mr-1.5"></i> Single Village (एकल गाँव)
+            </button>
+            <button type="button" onclick="switchTab('manage')" id="tab-manage" class="px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all whitespace-nowrap">
+                <i class="fa-solid fa-database mr-1.5"></i> Manage Collections
+            </button>
+        </div>
+
+        <!-- TAB 1: Bulk JSON Uploader (Fastest Way for District/Multiple Villages) -->
+        <div id="section-bulk" class="space-y-6">
+            <section class="portal-card rounded-2xl p-6 space-y-4 border-l-4 border-l-blue-900">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">पूरे ज़िले या कई गाँवों का डेटा एक साथ अपलोड करें (Bulk Upload)</h2>
+                        <p class="text-xs text-slate-500 mt-1">नीचे दिए गए बॉक्स में JSON फॉर्मेट का डेटा पेस्ट करें या अपनी JSON फाइल अपलोड करें।</p>
+                    </div>
+                    <label class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 cursor-pointer transition-all">
+                        <i class="fa-solid fa-upload mr-1"></i> `.json` फाइल चुनें
+                        <input type="file" accept=".json" onchange="handleFileUpload(event)" class="hidden">
+                    </label>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">JSON Data Textarea:</label>
+                    <textarea id="bulk-json-input" rows="12" placeholder='यहाँ पूरे ज़िले का JSON डेटा पेस्ट करें...
+{
+  "madhya_pradesh__chhatarpur__chandla__ghatra": {
+    "villageId": "madhya_pradesh__chhatarpur__chandla__ghatra",
+    "state": "Madhya Pradesh",
+    "district": "Chhatarpur",
+    "subdistrict": "Chandla",
+    "village": "Ghatra",
+    "facilities": { "electricity": "24 घंटे", "water": "नल-जल चालू", "school": "प्राथमिक शाला", "health": "स्वास्थ्य केंद्र" },
+    "publicPlaces": [{ "name": "ग्राम पंचायत भवन", "condition": "good", "incharge": "सचिव" }]
+  }
+}' class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3.5 text-xs font-mono focus:outline-none focus:border-blue-800"></textarea>
+                </div>
+
+                <div class="pt-2">
+                    <button type="button" onclick="uploadBulkDataToCloud()" class="py-3 px-6 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>सभी गाँवों का डेटा एक साथ डेटाबेस में डालें (Upload All)</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 2: Create Single Village -->
+        <div id="section-create" class="hidden space-y-6">
+            <section class="portal-card rounded-2xl p-6 space-y-5 border-l-4 border-l-emerald-600">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">नया एकल गाँव बनाएँ</h2>
+                    <p class="text-xs text-slate-500 mt-1">स्पेलिंग का ध्यान रखें ताकि `home.html` में सही लोड हो।</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">राज्य (State) <span class="text-red-500">*</span></label>
+                        <input type="text" id="new-state" placeholder="उदा. Madhya Pradesh" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:border-blue-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ज़िला (District) <span class="text-red-500">*</span></label>
+                        <input type="text" id="new-district" placeholder="उदा. Chhatarpur" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:border-blue-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">तहसील (Sub-District) <span class="text-red-500">*</span></label>
+                        <input type="text" id="new-subdistrict" placeholder="उदा. Chandla" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:border-blue-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">गाँव (Village) <span class="text-red-500">*</span></label>
+                        <input type="text" id="new-village" placeholder="उदा. Ghatra" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:border-blue-800">
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="button" onclick="createNewVillageCollection()" class="py-3 px-6 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-2">
+                        <i class="fa-solid fa-folder-plus"></i>
+                        <span>गाँव जोड़ें</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 3: Manage Collections -->
+        <div id="section-manage" class="hidden space-y-6">
+            <section class="portal-card rounded-2xl p-5 space-y-4 border-l-4 border-l-slate-700">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <h2 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-database text-slate-700"></i>
+                        <span>डेटाबेस में मौजूद सभी गाँव</span>
+                    </h2>
+                    <button type="button" onclick="loadAllVillagesFromCloud()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all">
+                        <i class="fa-solid fa-rotate mr-1"></i> रिफ्रेश सूची
+                    </button>
+                </div>
+
+                <div id="villages-list-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <p class="text-xs text-slate-400 italic py-4">डेटाबेस से सूची लोड हो रही है...</p>
+                </div>
+            </section>
+
+            <!-- Editor Form -->
+            <div id="admin-form-container" class="hidden space-y-6">
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-between">
+                    <span id="active-village-title"></span>
+                    <span class="text-[10px] bg-emerald-200/60 px-2 py-0.5 rounded uppercase">सक्रिय रिकॉर्ड</span>
+                </div>
+
+                <section class="portal-card rounded-2xl p-5 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-grid-2 text-blue-900"></i>
+                        <span>बुनियादी सुविधाएं अपडेट करें</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">बिजली आपूर्ति (Electricity)</label>
+                            <input type="text" id="fac-electricity" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-blue-800">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">पेयजल / नल-जल (Water Supply)</label>
+                            <input type="text" id="fac-water" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-blue-800">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">शिक्षा / विद्यालय (School)</label>
+                            <input type="text" id="fac-school" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-blue-800">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">स्वास्थ्य केंद्र (Health Center)</label>
+                            <input type="text" id="fac-health" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-blue-800">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="portal-card rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                            <i class="fa-solid fa-building-flag text-emerald-700"></i>
+                            <span>सार्वजनिक स्थल एवं शासकीय भवन</span>
+                        </h3>
+                        <button type="button" onclick="addPublicPlaceRow()" class="px-3 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold shadow-sm">
+                            <i class="fa-solid fa-plus mr-1"></i> नया स्थान जोड़ें
+                        </button>
+                    </div>
+
+                    <div id="places-input-list" class="space-y-3"></div>
+                </section>
+
+                <div class="pt-2">
+                    <button type="button" onclick="saveDataToCloud()" class="w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+                        <span>डेटाबेस में सुरक्षित करें (Save to Cloud)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500 mt-auto">
+        <p>© 2026 विकास धारा (Vikas Dhara) • एडमिनिस्ट्रेटर पोर्टल</p>
+    </footer>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Global Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+        if (sessionStorage.getItem('vikas_dhara_admin') !== 'true') {
+            window.location.href = 'login.html';
+        }
+
+        function adminLogout() {
+            sessionStorage.removeItem('vikas_dhara_admin');
+            window.location.href = 'login.html';
+        }
+
+        function showToast(msg, isError = false) {
+            const box = document.getElementById('toast-box');
+            const txt = document.getElementById('toast-msg');
+            txt.innerText = msg;
+            box.className = `px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-between shadow-sm ${isError ? 'bg-red-50 border border-red-200 text-red-800' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'}`;
+            box.classList.remove('hidden');
+            setTimeout(() => box.classList.add('hidden'), 4000);
+        }
+
+        function switchTab(tab) {
+            const bSec = document.getElementById('section-bulk');
+            const cSec = document.getElementById('section-create');
+            const mSec = document.getElementById('section-manage');
+            const tB = document.getElementById('tab-bulk');
+            const tC = document.getElementById('tab-create');
+            const tM = document.getElementById('tab-manage');
+
+            bSec.classList.add('hidden');
+            cSec.classList.add('hidden');
+            mSec.classList.add('hidden');
+            tB.className = "px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all whitespace-nowrap";
+            tC.className = "px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all whitespace-nowrap";
+            tM.className = "px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all whitespace-nowrap";
+
+            if (tab === 'bulk') {
+                bSec.classList.remove('hidden');
+                tB.className = "px-4 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white shadow-sm transition-all whitespace-nowrap";
+            } else if (tab === 'create') {
+                cSec.classList.remove('hidden');
+                tC.className = "px-4 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white shadow-sm transition-all whitespace-nowrap";
+            } else {
+                mSec.classList.remove('hidden');
+                tM.className = "px-4 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white shadow-sm transition-all whitespace-nowrap";
+                loadAllVillagesFromCloud();
+            }
+        }
+
+        // Handle JSON File Upload into Textarea
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('bulk-json-input').value = e.target.result;
+                showToast("फाइल का डेटा सफलतापूर्बक लोड हो गया है!");
+            };
+            reader.readAsText(file);
+        }
+
+        // Upload Bulk Data to Firestore
+        async function uploadBulkDataToCloud() {
+            const rawText = document.getElementById('bulk-json-input').value.trim();
+            if (!rawText) {
+                showToast("कृपया JSON डेटा पेस्ट करें या फाइल चुनें!", true);
+                return;
+            }
+
+            let jsonData;
+            try {
+                jsonData = JSON.parse(rawText);
+            } catch (err) {
+                showToast("JSON फॉर्मेट अमान्य (Invalid) है! कृपया सही JSON लिखें।", true);
+                return;
+            }
+
+            showToast("डेटाबेस में अपलोड हो रहा है, कृपया प्रतीक्षा करें...");
+
+            let successCount = 0;
+            try {
+                for (const key in jsonData) {
+                    const villageObj = jsonData[key];
+                    const vId = villageObj.villageId || key;
+                    await db.collection("villages").doc(vId).set(villageObj, { merge: true });
+                    successCount++;
+                }
+                showToast(`सफलतापूर्वक ${successCount} गाँवों का डेटा डेटाबेस में सेव हो गया है!`);
+                switchTab('manage');
+            } catch (error) {
+                showToast("अपलोड करने में त्रुटि: " + error.message, true);
+            }
+        }
+
+        const slugify = text => text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_');
+
+        async function createNewVillageCollection() {
+            const state = document.getElementById('new-state').value.trim();
+            const district = document.getElementById('new-district').value.trim();
+            const subdistrict = document.getElementById('new-subdistrict').value.trim();
+            const village = document.getElementById('new-village').value.trim();
+
+            if (!state || !district || !subdistrict || !village) {
+                showToast("कृपया सभी चारों फ़ील्ड भरें!", true);
+                return;
+            }
+
+            const villageId = `${slugify(state)}__${slugify(district)}__${slugify(subdistrict)}__${slugify(village)}`;
+            const initialData = {
+                villageId: villageId,
+                state: state,
+                district: district,
+                subdistrict: subdistrict,
+                village: village,
+                facilities: { electricity: "", water: "", school: "", health: "" },
+                publicPlaces: [],
+                createdAt: new Date().toISOString()
+            };
+
+            const success = await saveVillageDataToCloud(villageId, initialData);
+            if (success) {
+                showToast(`गाँव '${village}' सफलतापूर्वक बन गया है!`);
+                switchTab('manage');
+            } else {
+                showToast("सेव करने में त्रुटि हुई।", true);
+            }
+        }
+
+        let currentEditingVillage = null;
+        let publicPlacesArray = [];
+
+        async function loadAllVillagesFromCloud() {
+            const container = document.getElementById('villages-list-container');
+            container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">सूची लोड हो रही है...</p>`;
+
+            try {
+                const snapshot = await db.collection("villages").get();
+                container.innerHTML = '';
+
+                if (snapshot.empty) {
+                    container.innerHTML = `<p class="text-xs text-slate-400 italic py-4">डेटाबेस में अभी कोई गाँव नहीं है।</p>`;
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    container.innerHTML += `
+                        <div class="portal-card rounded-xl p-3.5 flex items-center justify-between hover:border-blue-500 transition-all cursor-pointer" onclick='selectVillageToEdit(${JSON.stringify(data)})'>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900">${data.village || 'अज्ञात'}</h4>
+                                <p class="text-[11px] text-slate-500 mt-0.5">${data.subdistrict || ''}, ${data.district || ''} (${data.state || ''})</p>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-900 text-xs font-bold border border-blue-200">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i> एडिट
+                            </span>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                container.innerHTML = `<p class="text-xs text-red-500 py-2">त्रुटि: ${e.message}</p>`;
+            }
+        }
+
+        function selectVillageToEdit(data) {
+            currentEditingVillage = data;
+            document.getElementById('active-village-title').innerText = `सक्रिय गाँव: ${data.village} (${data.subdistrict}, ${data.district}, ${data.state})`;
+            document.getElementById('admin-form-container').classList.remove('hidden');
+
+            document.getElementById('fac-electricity').value = data.facilities?.electricity || '';
+            document.getElementById('fac-water').value = data.facilities?.water || '';
+            document.getElementById('fac-school').value = data.facilities?.school || '';
+            document.getElementById('fac-health').value = data.facilities?.health || '';
+
+            publicPlacesArray = data.publicPlaces || [];
+            renderPublicPlacesInputs();
+            window.scrollTo({ top: document.getElementById('admin-form-container').offsetTop, behavior: 'smooth' });
+        }
+
+        function addPublicPlaceRow() {
+            publicPlacesArray.push({ name: '', condition: 'good', incharge: '' });
+            renderPublicPlacesInputs();
+        }
+
+        function removePublicPlaceRow(index) {
+            publicPlacesArray.splice(index, 1);
+            renderPublicPlacesInputs();
+        }
+
+        function renderPublicPlacesInputs() {
+            const container = document.getElementById('places-input-list');
+            container.innerHTML = '';
+
+            if (publicPlacesArray.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic py-2">कोई सार्वजनिक स्थान नहीं जोड़ा गया।</p>`;
+                return;
+            }
+
+            publicPlacesArray.forEach((place, idx) => {
+                container.innerHTML += `
+                    <div class="portal-card rounded-xl p-3.5 space-y-3 bg-slate-50/50">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700">स्थान #${idx + 1}</span>
+                            <button type="button" onclick="removePublicPlaceRow(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold">
+                                <i class="fa-solid fa-trash-can"></i> हटाएं
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">स्थान का नाम</label>
+                                <input type="text" value="${place.name || ''}" oninput="publicPlacesArray[${idx}].name = this.value" placeholder="उदा. पंचायत भवन" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-800">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">स्थिति</label>
+                                <select onchange="publicPlacesArray[${idx}].condition = this.value" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-800">
+                                    <option value="good" ${place.condition === 'good' ? 'selected' : ''}>अच्छी स्थिति</option>
+                                    <option value="repair" ${place.condition === 'repair' ? 'selected' : ''}>मरम्मत आवश्यक</option>
+                                    <option value="closed" ${place.condition === 'closed' ? 'selected' : ''}>बंद पड़ा है</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">प्रभारी</label>
+                                <input type="text" value="${place.incharge || ''}" oninput="publicPlacesArray[${idx}].incharge = this.value" placeholder="उदा. सचिव" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-800">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function saveDataToCloud() {
+            if (!currentEditingVillage || !currentEditingVillage.villageId) {
+                showToast("कोई गाँव चयनित नहीं है!", true);
+                return;
+            }
+
+            const facilitiesData = {
+                electricity: document.getElementById('fac-electricity').value.trim(),
+                water: document.getElementById('fac-water').value.trim(),
+                school: document.getElementById('fac-school').value.trim(),
+                health: document.getElementById('fac-health').value.trim()
+            };
+
+            const payload = {
+                ...currentEditingVillage,
+                facilities: facilitiesData,
+                publicPlaces: publicPlacesArray,
+                updatedAt: new Date().toISOString()
+            };
+
+            const success = await saveVillageDataToCloud(currentEditingVillage.villageId, payload);
+            if (success) {
+                showToast("डेटा सफलतापूर्वक सुरक्षित हो गया है!");
+            } else {
+                showToast("डेटा सेव करने में त्रुटि हुई।", true);
+            }
+        }
+    </script>
+</body>
+</html>
