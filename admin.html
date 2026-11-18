@@ -329,7 +329,17 @@
                 let aiRawText = resJson.candidates[0].content.parts[0].text;
                 aiRawText = aiRawText.replace(/```json/g, '').replace(/```/g, '').trim();
 
-                const villagesObject = JSON.parse(aiRawText);
+                // Safe JSON parser function jo chhoti-moti syntax ki galti apne aap theek kar dega
+let villagesObject;
+try {
+    villagesObject = JSON.parse(aiRawText);
+} catch (parseErr) {
+    console.warn("Direct JSON.parse failed, cleaning string...", parseErr);
+    // Trailing commas ya minor formatting theek karne ke liye clean up
+    let cleanedText = aiRawText.replace(/,\s*([\]}])/g, '$1');
+    villagesObject = JSON.parse(cleanedText);
+}
+
                 const keys = Object.keys(villagesObject);
 
                 statusText.innerText = `AI ने ${keys.length} गाँव तैयार कर लिए हैं! अब सीधे Firebase डेटाबेस में सेव हो रहा है...`;
