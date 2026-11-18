@@ -219,32 +219,53 @@
             loadVillageData();
         }
 
-        // URL या localStorage से चुनी गई लोकेशन निकालना
+        // सुरक्षित लोकेशन और एरर हैंडलिंग के साथ
         function getSelectedLocation() {
             const params = new URLSearchParams(window.location.search);
             if (params.has('id') && params.has('village')) {
-                return {
+                const loc = {
                     villageId: params.get('id'),
                     state: params.get('state'),
                     district: params.get('district'),
                     subdistrict: params.get('subdistrict'),
                     village: params.get('village')
                 };
+                localStorage.setItem('vikas_dhara_selected_location', JSON.stringify(loc));
+                return loc;
             }
             const saved = localStorage.getItem('vikas_dhara_selected_location');
             if (saved) {
-                return JSON.parse(saved);
+                try {
+                    return JSON.parse(saved);
+                } catch(e) {
+                    console.error("Local storage parse error:", e);
+                    return { error: "LocalStorage JSON Parse Error: " + e.message };
+                }
             }
-            // अगर कुछ न मिले तो वापस index.html पर भेजें
-            window.location.href = 'index.html';
-            return null;
+            return { error: "URL या LocalStorage में किसी भी village की ID नहीं मिली। कृपया पहले index.html से गाँव चुनें।" };
         }
 
         async function loadVillageData() {
             const loc = getSelectedLocation();
-            if (!loc) return;
+            
+            // अगर लोकेशन में कोई भी कमी या एरर है, तो चुपचाप भागने के बजाय स्क्रीन पर कारण दिखाओ[span_2](start_span)[span_2](end_span)
+            if (!loc || loc.error) {
+                document.getElementById('loading-box').classList.add('hidden');
+                document.getElementById('empty-state-box').classList.remove('hidden');
+                document.getElementById('display-village-name').innerText = "चयनित ग्राम अनुपस्थित";
+                document.getElementById('display-village-path').innerHTML = `<span class="text-red-500 font-bold">त्रुटि: गाँव का पता नहीं चल पाया</span>`;
+                
+                document.getElementById('lbl-empty-title').innerText = "गाँव लोड करने में समस्या";
+                document.getElementById('lbl-empty-desc').innerHTML = `
+                    <b>कारण:</b> ${loc ? loc.error : 'गाँव की जानकारी गायब है।'}<br><br>
+                    <a href="index.html" class="inline-block px-4 py-2 bg-blue-900 text-white rounded-xl font-bold text-xs">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> मुख्य पृष्ठ पर जाकर गाँव चुनें
+                    </a>
+                `;
+                return;
+            }
 
-            // UI पर गाँव का नाम और रास्ता दिखाएं
+            // UI पर गाँव का नाम और रास्ता सेट करें
             document.getElementById('display-village-name').innerText = loc.village;
             document.getElementById('display-village-path').innerHTML = `
                 <span>${loc.subdistrict}</span><i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
@@ -256,17 +277,24 @@
             document.getElementById('content-box').classList.add('hidden');
             document.getElementById('empty-state-box').classList.add('hidden');
 
-            // firebase-config.js के ग्लोबल फ़ंक्शन से डेटा मँगवाएं
-            const result = await getVillageDataFromCloud(loc.villageId);
+            try {
+                // firebase-config.js वाले ग्लोबल फ़ंक्शन से सीधा Firebase Firestore से डेटा मँगवा रहे हैं
+                const result = await getVillageDataFromCloud(loc.villageId);
+                document.getElementById('loading-box').classList.add('hidden');
 
-            document.getElementById('loading-box').classList.add('hidden');
-
-            if (result.exists && result.data) {
-                renderDashboardData(result.data);
-                document.getElementById('content-box').classList.remove('hidden');
-            } else {
-                // अगर डेटाबेस में इस गाँव का रिकॉर्ड नहीं है
+                if (result.exists && result.data) {
+                    renderDashboardData(result.data);
+                    document.getElementById('content-box').classList.remove('hidden');
+                } else {
+                    document.getElementById('empty-state-box').classList.remove('hidden');
+                    document.getElementById('lbl-empty-title').innerText = "डेटाबेस में रिकॉर्ड नहीं मिला";
+                    document.getElementById('lbl-empty-desc').innerText = `Village ID: "${loc.villageId}" का डेटा Firebase Firestore में मौजूद नहीं है। कृपया Admin Panel से यह गाँव जोड़ें।`;
+                }
+            } catch (err) {
+                document.getElementById('loading-box').classList.add('hidden');
                 document.getElementById('empty-state-box').classList.remove('hidden');
+                document.getElementById('lbl-empty-title').innerText = "Firebase कनेक्शन त्रुटि";
+                document.getElementById('lbl-empty-desc').innerText = "त्रुटि विवरण: " + err.message;
             }
         }
 
@@ -338,4 +366,3 @@
     </script>
 </body>
 </html>
-
