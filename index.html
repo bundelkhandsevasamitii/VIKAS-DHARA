@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -75,11 +74,11 @@
                     <p id="app-subtitle" class="text-xs text-slate-500 font-medium mt-1">ग्राम विकास एवं सार्वजनिक सुविधा सूचना प्रणाली</p>
                 </div>
             </div>
-<!-- Admin Login Button in Header -->
-<a href="login.html" title="Admin Login" class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 transition-all">
-    <i class="fa-solid fa-lock text-[10px] text-blue-900"></i>
-    <span>एडमिन लॉगिन</span>
-</a>
+            <!-- Admin Login Button in Header -->
+            <a href="login.html" title="Admin Login" class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 transition-all">
+                <i class="fa-solid fa-lock text-[10px] text-blue-900"></i>
+                <span>एडमिन लॉगिन</span>
+            </a>
             
             <!-- Hindi / English Language Switcher -->
             <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-300" role="group" aria-label="Language Switcher">
@@ -188,7 +187,7 @@
                         </div>
                     </div>
 
-                    <!-- Quick Village Filter Input (Appears when villages load so users can quickly find their village among hundreds) -->
+                    <!-- Quick Village Filter Input -->
                     <div id="village-search-wrapper" class="hidden relative mb-2">
                         <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3.5 top-1/2 -translate-y-1/2"></i>
                         <input type="text" id="village-search-input" oninput="filterVillages()" placeholder="गाँव का नाम खोजें..." class="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-8 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-900/10 transition-all">
@@ -202,7 +201,7 @@
                     </select>
                 </div>
 
-                <!-- Submit Button (Redirects to home.html) -->
+                <!-- Submit Button -->
                 <div class="pt-3">
                     <button type="submit" id="btn-submit" class="w-full py-3.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-600/20 active:scale-[0.99] transition-all flex items-center justify-center space-x-2">
                         <span id="btn-submit-text">आगे बढ़ें / पोर्टल खोलें</span>
@@ -219,26 +218,28 @@
         <p id="footer-text">© 2026 विकास धारा (Vikas Dhara) • ग्राम पंचायत डिजिटल सूचना पोर्टल</p>
     </footer>
 
+    <!-- Firebase SDKs & Config (Zaroori Connection Bridge) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
     <script>
         // =========================================================================
         // 1. STATE & BILINGUAL UI CONFIGURATION
         // =========================================================================
         let currentLang = localStorage.getItem('vikas_dhara_lang') || 'hi';
 
-        // Primary & Fallback Open-Source Indian Administrative Hierarchy (LGD / Census) API Endpoints
         const DATA_SOURCES = [
             "https://raw.githubusercontent.com/pranshumaheshwari/indian-cities-and-villages/master/data.json",
             "https://cdn.jsdelivr.net/gh/pranshumaheshwari/indian-cities-and-villages@master/data.json"
         ];
 
-        // Cached datasets in memory for zero-lag switching
-        let fullIndiaHierarchy = null; // Stores full State -> District -> SubDistrict -> Village tree if loaded
+        let fullIndiaHierarchy = null;
         let currentStatesList = [];
         let currentDistrictsList = [];
         let currentSubDistrictsList = [];
         let currentVillagesList = [];
 
-        // Official Hindi translations for all 36 Indian States & Union Territories
         const STATE_HINDI_MAP = {
             "ANDAMAN AND NICOBAR ISLANDS": "अंडमान और निकोबार द्वीप समूह",
             "ANDHRA PRADESH": "आंध्र प्रदेश",
@@ -283,7 +284,6 @@
             "WEST BENGAL": "पश्चिम बंगाल"
         };
 
-        // Bilingual UI Dictionary
         const i18n = {
             hi: {
                 appTitle: "विकास धारा",
@@ -308,7 +308,6 @@
                 villagesUnit: "गाँव",
                 btnSubmitText: "आगे बढ़ें / पोर्टल खोलें",
                 errorIncomplete: "कृपया आगे बढ़ने के लिए राज्य, ज़िला, तहसील और गाँव चारों विकल्प चुनें।",
-                networkFallbackInfo: "इंटरनेट धीमा होने के कारण ऑफ़लाइन मानक सूची सक्रिय की गई है।",
                 footerText: "© 2026 विकास धारा (Vikas Dhara) • ग्राम पंचायत डिजिटल सूचना पोर्टल"
             },
             en: {
@@ -334,27 +333,24 @@
                 villagesUnit: "Villages",
                 btnSubmitText: "Proceed / Open Portal",
                 errorIncomplete: "Please select all 4 fields (State, District, Sub-District, and Village) to proceed.",
-                networkFallbackInfo: "Loaded built-in administrative dataset due to slow network.",
                 footerText: "© 2026 Vikas Dhara • Gram Panchayat Digital Information Portal"
             }
         };
 
         // =========================================================================
-        // 2. TRANSLITERATION & DISPLAY HELPERS (ENGLISH <-> HINDI)
+        // 2. TRANSLITERATION & DISPLAY HELPERS
         // =========================================================================
         function toTitleCase(str) {
             if (!str) return "";
             return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
         }
 
-        // Smart phonetic English-to-Devanagari transliterator for Indian place names
         function transliterateToHindi(englishName) {
             if (!englishName) return "";
             const upper = englishName.trim().toUpperCase();
             if (STATE_HINDI_MAP[upper]) return STATE_HINDI_MAP[upper];
 
             let s = englishName.trim().toLowerCase();
-            // Handle common Indian place suffixes accurately
             s = s.replace(/puram$/g, "पुरम")
                  .replace(/pur$/g, "पुर")
                  .replace(/garh$/g, "गढ़")
@@ -391,7 +387,6 @@
             let out = "";
             let i = 0;
             while (i < s.length) {
-                // Keep already converted Devanagari characters intact
                 if (s.charCodeAt(i) >= 0x0900 && s.charCodeAt(i) <= 0x097F) {
                     out += s[i];
                     i++;
@@ -424,7 +419,6 @@
                             i += 3;
                             continue;
                         } else if (next !== "a" || (i + 2 >= s.length)) {
-                            // Add 'ा' at word-end 'a' (e.g. Ghtra -> घटरा), skip inherent 'a' mid-word
                             if (next === "a" && (i + 2 >= s.length || s[i + 2] === " ")) {
                                 out += "ा";
                             } else if (next !== "a") {
@@ -447,7 +441,6 @@
             return out;
         }
 
-        // Format option label according to selected UI language
         function formatPlaceLabel(englishRawName, isState = false) {
             const cleanEng = toTitleCase(englishRawName.trim());
             if (currentLang === 'en') {
@@ -462,7 +455,7 @@
         }
 
         // =========================================================================
-        // 3. DATA LOADING (ALL STATES, DISTRICTS, SUB-DISTRICTS & VILLAGES)
+        // 3. DATA LOADING
         // =========================================================================
         function toggleLoader(level, isLoading) {
             const el = document.getElementById(`loader-${level}`);
@@ -472,7 +465,6 @@
             else el.classList.add('hidden');
         }
 
-        // Fallback comprehensive All-India States + Sample Districts/SubDistricts/Villages if offline
         const OFFLINE_INDIA_DATASET = [
             {
                 state: "MADHYA PRADESH",
@@ -486,79 +478,16 @@
                         ]
                     },
                     {
-                        district: "BHOPAL",
+                        district: "CHHATARPUR",
                         subDistricts: [
-                            { subDistrict: "HUZUR", villages: ["Ratibad", "Neelbad", "Kolar", "Misrod", "Bilkisganj", "Mugaliya Hat"] },
-                            { subDistrict: "BERASIA", villages: ["Gunga", "Nazeerabad", "Dhamarra", "Runaha"] }
-                        ]
-                    },
-                    {
-                        district: "INDORE",
-                        subDistricts: [
-                            { subDistrict: "MHOW", villages: ["Kodriya", "Manpur", "Simrol", "Hasalpur"] },
-                            { subDistrict: "SANWER", villages: ["Kshipra", "Dharmapuri", "Ajnod"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                state: "UTTAR PRADESH",
-                districts: [
-                    {
-                        district: "VARANASI",
-                        subDistricts: [
-                            { subDistrict: "PINDRA", villages: ["Phoolpur", "Babatpur", "Kharagpur", "Sindhora"] },
-                            { subDistrict: "SADAR", villages: ["Kashi Vidyapith", "Chiraigaon", "Harhua"] }
-                        ]
-                    },
-                    {
-                        district: "LUCKNOW",
-                        subDistricts: [
-                            { subDistrict: "BAKSHI KA TALAB", villages: ["Itaunja", "Mahona", "Bargadi"] },
-                            { subDistrict: "MOHANLALGANJ", villages: ["Gosainganj", "Nigohan", "Sisendi"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                state: "RAJASTHAN",
-                districts: [
-                    {
-                        district: "JAIPUR",
-                        subDistricts: [
-                            { subDistrict: "AMER", villages: ["Kukas", "Achrol", "Chandwaji", "Manoharpur"] },
-                            { subDistrict: "SANGANER", villages: ["Muhana", "Watika", "Bagru"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                state: "MAHARASHTRA",
-                districts: [
-                    {
-                        district: "PUNE",
-                        subDistricts: [
-                            { subDistrict: "HAVELI", villages: ["Wagholi", "Loni Kalbhor", "Uruli Kanchan", "Khadakwasla"] },
-                            { subDistrict: "BARAMATI", villages: ["Malegaon", "Supe", "Katewadi"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                state: "BIHAR",
-                districts: [
-                    {
-                        district: "PATNA",
-                        subDistricts: [
-                            { subDistrict: "DANAPUR", villages: ["Maner", "Bihta", "Naubatpur"] },
-                            { subDistrict: "BARH", villages: ["Bakhtiyarpur", "Pandarak", "Athmalgola"] }
+                            { subDistrict: "GOURIHAR", villages: ["Ghatra", "Chandla", "Lavkush Nagar", "Baghauta"] },
+                            { subDistrict: "CHHATARPUR", villages: ["Bajnour", "Dhamora", "Lugasi"] }
                         ]
                     }
                 ]
             }
         ];
 
-        // Fetch full All-India Administrative Dataset (All 36 States/UTs, 750+ Districts, 6,000+ Sub-Districts, 6,40,000+ Villages)
         async function fetchAllIndiaDataset() {
             if (fullIndiaHierarchy) return fullIndiaHierarchy;
 
@@ -576,9 +505,7 @@
                 }
             }
 
-            // If offline or blocked by firewall, synthesize all 36 states with offline sample districts
-            const allStateNames = Object.keys(STATE_HINDI_MAP).filter((v, idx, arr) => {
-                // Keep canonical 36 states/UTs
+            const allStateNames = Object.keys(STATE_HINDI_MAP).filter((v) => {
                 return !["DADRA AND NAGAR HAVELI", "DAMAN AND DIU", "NCT OF DELHI", "ORISSA", "PONDICHERRY"].includes(v);
             });
 
@@ -600,12 +527,10 @@
             return fullIndiaHierarchy;
         }
 
-        // Initialize States Dropdown on Page Load
         async function initializePortalData() {
             toggleLoader('state', true);
             const dataset = await fetchAllIndiaDataset();
             
-            // Extract and sort all States alphabetically
             currentStatesList = dataset
                 .map(item => item.state)
                 .filter(Boolean)
@@ -644,7 +569,6 @@
             const vilSelect = document.getElementById('select-village');
             const t = i18n[currentLang];
 
-            // Reset downstream dropdowns
             currentDistrictsList = [];
             currentSubDistrictsList = [];
             currentVillagesList = [];
@@ -793,7 +717,6 @@
             const subObj = distObj?.subDistricts?.find(sd => sd.subDistrict === subVal);
 
             if (subObj && Array.isArray(subObj.villages)) {
-                // Remove duplicate village names and sort alphabetically
                 currentVillagesList = [...new Set(subObj.villages.filter(Boolean))]
                     .sort((a, b) => a.localeCompare(b));
             }
@@ -817,7 +740,6 @@
                 return;
             }
 
-            // Show quick search box & total village count badge
             searchWrapper.classList.remove('hidden');
             countBadge.classList.remove('hidden');
             countBadge.textContent = `${currentVillagesList.length} ${t.villagesUnit}`;
@@ -839,7 +761,6 @@
             }
 
             vilSelect.innerHTML = `<option value="">${t.defaultVillageReady} (${filtered.length})</option>`;
-            // Use DocumentFragment for fast rendering even with 500+ villages
             const fragment = document.createDocumentFragment();
             filtered.forEach(vil => {
                 const opt = document.createElement('option');
@@ -849,7 +770,6 @@
             });
             vilSelect.appendChild(fragment);
 
-            // Auto-select if filter narrows down to exact 1 village
             if (filtered.length === 1 && q.length > 0) {
                 vilSelect.value = filtered[0];
             } else if (prevValue && filtered.includes(prevValue)) {
@@ -877,7 +797,7 @@
         }
 
         // =========================================================================
-        // 5. LANGUAGE SWITCHER (HINDI / ENGLISH)
+        // 5. LANGUAGE SWITCHER
         // =========================================================================
         function setLanguage(lang) {
             currentLang = lang;
@@ -910,7 +830,6 @@
             document.getElementById('btn-submit-text').textContent = t.btnSubmitText;
             document.getElementById('footer-text').textContent = t.footerText;
 
-            // Re-render populated dropdowns in the newly selected language while preserving selections
             if (currentStatesList.length > 0) renderStatesDropdown();
             if (currentDistrictsList.length > 0) renderDistrictsDropdown();
             else document.getElementById('select-district').innerHTML = `<option value="">${t.defaultDistrict}</option>`;
@@ -926,7 +845,7 @@
         }
 
         // =========================================================================
-        // 6. VALIDATION, LOCALSTORAGE SAVE & REDIRECT TO home.html
+        // 6. VALIDATION & FIREBASE BRIDGE CONNECTION (UPDATED)
         // =========================================================================
         function showToast(message) {
             const box = document.getElementById('toast-box');
@@ -953,34 +872,28 @@
                 return;
             }
 
-            // Prepare bilingual location payload for home.html
+            // Slug format villageId generate karna jo admin panel aur home.html use karte hain
+            const slug = (str) => str.trim().toLowerCase().replace(/\s+/g, '_');
+            const villageId = `${slug(stateVal)}__${slug(districtVal)}__${slug(subdistrictVal)}__${slug(villageVal)}`;
+
+            // Location payload with villageId for home.html & firebase fetching
             const selectedLocationData = {
-                state: {
-                    en: toTitleCase(stateVal),
-                    hi: STATE_HINDI_MAP[stateVal.toUpperCase()] || transliterateToHindi(stateVal)
-                },
-                district: {
-                    en: toTitleCase(districtVal),
-                    hi: transliterateToHindi(districtVal)
-                },
-                subdistrict: {
-                    en: toTitleCase(subdistrictVal),
-                    hi: transliterateToHindi(subdistrictVal)
-                },
-                village: {
-                    en: toTitleCase(villageVal),
-                    hi: transliterateToHindi(villageVal)
-                },
+                villageId: villageId,
+                state: toTitleCase(stateVal),
+                district: toTitleCase(districtVal),
+                subdistrict: toTitleCase(subdistrictVal),
+                village: toTitleCase(villageVal),
                 language: currentLang,
                 selectedAt: new Date().toISOString()
             };
 
-            // Save to localStorage for home.html
-            localStorage.setItem('vikas_dhara_location', JSON.stringify(selectedLocationData));
+            // Save to localStorage
+            localStorage.setItem('vikas_dhara_selected_location', JSON.stringify(selectedLocationData));
             localStorage.setItem('vikas_dhara_lang', currentLang);
 
-            // Redirect cleanly to home.html with query parameters
+            // Redirect to home.html with exact id and query parameters
             const params = new URLSearchParams({
+                id: villageId,
                 state: toTitleCase(stateVal),
                 district: toTitleCase(districtVal),
                 subdistrict: toTitleCase(subdistrictVal),
@@ -1001,4 +914,3 @@
     </script>
 </body>
 </html>
-```
