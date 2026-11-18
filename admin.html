@@ -290,15 +290,15 @@
             statusBox.classList.remove('hidden');
             statusText.innerText = `AI (${region}) के सभी प्रमुख गाँवों का डेटा तैयार कर रहा है...`;
 
-            const promptText = `Generate a valid JSON object containing 25 real villages of ${region}, India.
-            Strictly follow this exact key naming format: "state__district__subdistrict__village" (all lowercase, spaces replaced with underscores).
-            Each value must be an object with exact fields:
+                       const promptText = `Generate a valid JSON object for the single village: "${region}, Madhya Pradesh, India".
+            Strictly follow this exact key naming format for the root object key: "state__district__subdistrict__village" (all lowercase, spaces replaced with underscores, e.g., "madhya_pradesh__chhatarpur__gourihar__ghatra").
+            The value must be an object with exact fields:
             {
               "villageId": "exact_same_key_as_above",
-              "state": "Exact State Name in English (e.g. Madhya Pradesh)",
-              "district": "Exact District Name in English (e.g. Chhatarpur)",
-              "subdistrict": "Exact Subdistrict Name in English (e.g. Gourihar)",
-              "village": "Exact Village Name in English",
+              "state": "Madhya Pradesh",
+              "district": "Chhatarpur",
+              "subdistrict": "Gourihar",
+              "village": "${region}",
               "facilities": {
                 "electricity": "Realistic status in Hindi",
                 "water": "Realistic status in Hindi",
@@ -310,10 +310,11 @@
                 { "name": "Prathmik Shala in Hindi", "condition": "good", "incharge": "Pradhan Adhyapak in Hindi" }
               ]
             }
-            Return ONLY raw valid JSON without markdown formatting or backticks.`;
+            Return ONLY raw valid JSON without markdown formatting, backticks, or extra text.`;
 
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
+
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
