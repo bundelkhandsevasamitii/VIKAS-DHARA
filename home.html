@@ -192,6 +192,15 @@
             }
         };
 
+        function normalizeSlugId(rawId) {
+            return (rawId || "")
+                .toString()
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9_]+/g, "_")
+                .replace(/^_+|_+$/g, "");
+        }
+
         function switchLanguage(lang) {
             currentLang = lang;
             localStorage.setItem('vikas_dhara_lang', lang);
@@ -219,25 +228,32 @@
             loadVillageData();
         }
 
-        // सुरक्षित लोकेशन और एरर हैंडलिंग के साथ
         function getSelectedLocation() {
             const params = new URLSearchParams(window.location.search);
-            if (params.has('id') && params.has('village')) {
+            const paramId = (params.get('id') || '').trim();
+            const paramVillage = (params.get('village') || '').trim();
+
+            if (paramId && paramVillage) {
                 const loc = {
-                    villageId: params.get('id'),
-                    state: params.get('state'),
-                    district: params.get('district'),
-                    subdistrict: params.get('subdistrict'),
-                    village: params.get('village')
+                    villageId: paramId,
+                    state: (params.get('state') || '').trim(),
+                    district: (params.get('district') || '').trim(),
+                    subdistrict: (params.get('subdistrict') || '').trim(),
+                    village: paramVillage
                 };
                 localStorage.setItem('vikas_dhara_selected_location', JSON.stringify(loc));
                 return loc;
             }
+
             const saved = localStorage.getItem('vikas_dhara_selected_location');
             if (saved) {
                 try {
-                    return JSON.parse(saved);
-                } catch(e) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.villageId && parsed.village) {
+                        return parsed;
+                    }
+                    return { error: "LocalStorage में villageId या village नाम खाली है।" };
+                } catch (e) {
                     console.error("Local storage parse error:", e);
                     return { error: "LocalStorage JSON Parse Error: " + e.message };
                 }
@@ -245,10 +261,45 @@
             return { error: "URL या LocalStorage में किसी भी village की ID नहीं मिली। कृपया पहले index.html से गाँव चुनें।" };
         }
 
+        async function fetchVillageWithFallback(rawVillageId) {
+            const cleanId = (rawVillageId || "").trim();
+            if (!cleanId) {
+                return { exists: false, data: null };
+            }
+
+            // 1. Direct lookup using exact villageId
+            const primaryResult = await getVillageDataFromCloud(cleanId);
+            if (primaryResult && primaryResult.exists && primaryResult.data) {
+                return primaryResult;
+            }
+
+            // 2. Normalized lowercase lookup (handles legacy IDs like Madhya_pradesh__...)
+            const normalizedId = normalizeSlugId(cleanId);
+            if (normalizedId && normalizedId !== cleanId) {
+                const lowerResult = await getVillageDataFromCloud(normalizedId);
+                if (lowerResult && lowerResult.exists && lowerResult.data) {
+                    return lowerResult;
+                }
+            }
+
+            // 3. Query by villageId field if Firestore has database instance
+            if (typeof db !== "undefined" && db) {
+                const querySnap = await db.collection("villages")
+                    .where("villageId", "in", [cleanId, normalizedId].filter(Boolean))
+                    .limit(1)
+                    .get();
+
+                if (!querySnap.empty) {
+                    return { exists: true, data: querySnap.docs[0].data() };
+                }
+            }
+
+            return { exists: false, data: null };
+        }
+
         async function loadVillageData() {
             const loc = getSelectedLocation();
             
-            // अगर लोकेशन में कोई भी कमी या एरर है, तो चुपचाप भागने के बजाय स्क्रीन पर कारण दिखाओ[span_2](start_span)[span_2](end_span)
             if (!loc || loc.error) {
                 document.getElementById('loading-box').classList.add('hidden');
                 document.getElementById('empty-state-box').classList.remove('hidden');
@@ -265,12 +316,11 @@
                 return;
             }
 
-            // UI पर गाँव का नाम और रास्ता सेट करें
             document.getElementById('display-village-name').innerText = loc.village;
             document.getElementById('display-village-path').innerHTML = `
-                <span>${loc.subdistrict}</span><i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
-                <span>${loc.district}</span><i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
-                <span>${loc.state}</span>
+                <span>${loc.subdistrict || ''}</span><i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
+                <span>${loc.district || ''}</span><i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
+                <span>${loc.state || ''}</span>
             `;
 
             document.getElementById('loading-box').classList.remove('hidden');
@@ -278,8 +328,7 @@
             document.getElementById('empty-state-box').classList.add('hidden');
 
             try {
-                // firebase-config.js वाले ग्लोबल फ़ंक्शन से सीधा Firebase Firestore से डेटा मँगवा रहे हैं
-                const result = await getVillageDataFromCloud(loc.villageId);
+                const result = await fetchVillageWithFallback(loc.villageId);
                 document.getElementById('loading-box').classList.add('hidden');
 
                 if (result.exists && result.data) {
@@ -294,7 +343,7 @@
                 document.getElementById('loading-box').classList.add('hidden');
                 document.getElementById('empty-state-box').classList.remove('hidden');
                 document.getElementById('lbl-empty-title').innerText = "Firebase कनेक्शन त्रुटि";
-                document.getElementById('lbl-empty-desc').innerText = "त्रुटि विवरण: " + err.message;
+                document.getElementById('lbl-empty-desc').innerText = `त्रुटि विवरण (${err.code || 'error'}): ${err.message}`;
             }
         }
 
@@ -305,7 +354,7 @@
             const facContainer = document.getElementById('facilities-container');
             facContainer.innerHTML = '';
             
-            if (data.facilities && Object.keys(data.facilities).length > 0) {
+            if (data.facilities && typeof data.facilities === 'object') {
                 for (const [key, value] of Object.entries(data.facilities)) {
                     const title = t.facNames[key] || key;
                     facContainer.innerHTML += `
@@ -316,7 +365,7 @@
                                 </div>
                                 <div>
                                     <p class="text-xs font-medium text-slate-500">${title}</p>
-                                    <p class="text-sm font-bold text-slate-900 mt-0.5">${value}</p>
+                                    <p class="text-sm font-bold text-slate-900 mt-0.5">${value ?? 'उपलब्ध नहीं'}</p>
                                 </div>
                             </div>
                         </div>
@@ -328,12 +377,14 @@
             const placesContainer = document.getElementById('places-container');
             placesContainer.innerHTML = '';
 
-            if (data.publicPlaces && data.publicPlaces.length > 0) {
+            if (Array.isArray(data.publicPlaces) && data.publicPlaces.length > 0) {
                 data.publicPlaces.forEach(place => {
-                    const statusText = t.statusLabels[place.condition] || place.condition;
+                    if (!place) return;
+                    const condKey = (place.condition || '').toLowerCase();
+                    const statusText = t.statusLabels[condKey] || place.condition || 'अज्ञात';
                     let badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
-                    if (place.condition === 'repair') badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
-                    if (place.condition === 'closed') badgeColor = "bg-red-50 text-red-700 border-red-200";
+                    if (condKey === 'repair') badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+                    if (condKey === 'closed') badgeColor = "bg-red-50 text-red-700 border-red-200";
 
                     placesContainer.innerHTML += `
                         <div class="portal-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -342,7 +393,7 @@
                                     <i class="fa-solid fa-building text-base"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-sm font-bold text-slate-900">${place.name}</h4>
+                                    <h4 class="text-sm font-bold text-slate-900">${place.name || 'सार्वजनिक स्थल'}</h4>
                                     <p class="text-xs text-slate-500 mt-0.5"><span class="font-semibold text-slate-700">प्रभारी:</span> ${place.incharge || 'लागू नहीं'}</p>
                                 </div>
                             </div>
