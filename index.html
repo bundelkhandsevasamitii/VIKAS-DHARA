@@ -873,13 +873,13 @@
             }
 
             // Slug format villageId generate karna jo admin panel aur home.html use karte hain
-            const Slug = (str) =>
-  (str || "")
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+            const slug = (str) => str
+  .trim()
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, "_")
+  .replace(/^_+|_+$/g, "");
+const villageId = `${slug(stateVal)}__${slug(districtVal)}__${slug(subdistrictVal)}__${slug(villageVal)}`;
+            
             
             const villageId = `${slug(stateVal)}__${slug(districtVal)}__${slug(subdistrictVal)}__${slug(villageVal)}`;
 
